@@ -1,6 +1,6 @@
 # Demos
 
-This is demo of SODA Foundations multi-cloud
+This is demo of SODA Foundations multi-cloud using streaming
 
 
  - DATA: Input data files for the Case 1 demo. This needs to be uploaded to Cloud backend using SODA Foundation Dashboard.
