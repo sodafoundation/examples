@@ -5,6 +5,13 @@
 
 This repo contains use case prototypes, demos and sample usage etc. The demos and use cases usally consider multiple projects in SODA Project Landscape integrated, so as to showcase the integration and reference usage. Users may start this as a reference. Please note all these are at demo level only.
 
+## How to submit examples/usecases to this repo
+ 1. Fork this repository
+ 2. Create separate folder for each example/usecases - Example : "BasicEdgeUsecase"
+ 3. Add a readme inside /BasicEdgeUsecase/ReadMe.md
+ 4. Add all the information about the examples, the usage, how to test etc inside the ReadMe.md
+ 5. Add all the files/subfolders needed for the example or usecase under the folder Example : /BasicEdgeUsecase/[all files or folders]
+
 ## Documentation
 
 [https://docs.sodafoundation.io](https://docs.sodafoundation.io/)
