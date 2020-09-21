@@ -5,7 +5,7 @@ This is demo of SODA Foundations Delfin performance monitoring feature using def
 
 Delfin is a heterogeneous infrastructure management platform. It manages and monitors multiple storage backends from a single place. Prometheus is default platform integrated with delfin for monitoring the performances of the storages.
 
-This example helps to setup delfin and prometheus together for POC. Once your setup is ready, you can register the storage devices for performance monitoring. The performance metrics can be viewed on prometheus server.
+This example helps to setup delfin and prometheus together for POC. Once your setup is ready, you can register the storage devices for performance monitoring. Later, the performance metrics can be viewed on prometheus server. This example also guides you to configure and update the targets and interval for scraping the metrics. 
 
 
 Follow the below steps to setup delfin and prometheus or go through the demo [video](https://drive.google.com/file/d/1WMmLXQeNlToZd0DP5hCFtDZ1IbNJpO6B/view?usp=drivesdk) for the reference.
