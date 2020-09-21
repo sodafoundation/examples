@@ -2,6 +2,6 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: soda-high-io
-provisioner: soda-csi-block
+provisioner: soda-csi
 parameters:
   profile: block.csi.ibm.com
