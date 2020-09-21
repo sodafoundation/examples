@@ -2,14 +2,14 @@
 
 This is a demo of SODA Foundations Delfin performance monitoring feature using default prometheus exporter.
 
-##### What is delfin
+#### What is delfin
 Delfin is a heterogeneous infrastructure management platform. It manages and monitors multiple storage backends from a single place. Prometheus is the default platform integrated with delfin for monitoring the performances of the storages.
 
-##### What is prometheus
+#### What is prometheus
 
 Prometheus is a free and popular open source system monitoring(event monitoring and alerting) tool. It uses a time-series database to store the real-time scpraped metrics value. The more detail about prometheus can be found [here](https://prometheus.io/).
 
-##### How to connect prometheus with delfin
+#### How to connect prometheus with delfin
 
 Below is the architecture diagram of prometheus and delfin. Delfin collects the performance metrics data through it's driver and pushes to the exporter interface. Prometheus exporter takes the data from the exporter interface of delfin and converted into time-series format(i.e prometheus database format) and persists in .txt file.
 
@@ -19,24 +19,17 @@ Now, the prometheus server comes and scrapes the metrics over this targeted path
 
 ![](/DelfinPerformance/delfin_architecture_with_prometheus.jpg)
 
-
-##### What are the usecase
-
-  1. Users want to monitor and analyse the performance of storage-arrays.
-
-  2. Users want to monitor and analyse the performance of storage-pools.
-
-  3. User wants to monitor and analyse the performance of storage-volumes.
-
-  4. Users want to monitor and analyse the performance of storage-controllers.
-
-  5. Users want to monitor and analyse the performance of storage-ports.
-
-  6. User wants to monitors and analyse the performance of storage-disks
+#### What are the usecase
+1. Users want to monitor and analyse the performance of storage-arrays
+2. Users want to monitor and analyse the performance of storage-pools
+3. Users want to monitor and analyse the performance of storage-volumes
+4. Users want to monitor and analyse the performance of storage-controllers
+5. Users want to monitor and analyse the performance of storage-ports
+6. Users want to monitor and analyse the performance of storage-disks
 
 The detailed usecases with different metrics(like read_throughput, bandwidth etc.) and resourcetype(like array, pool etc.) are [here](https://github.com/sodafoundation/design-specs/blob/dcdee7b67d4a4ee74f065f00b2e93efb22f2493a/specs/SIM/PerfomanceMontoringDesign.md)
 
-##### How to setup delfin with prometheus
+#### How to setup delfin with prometheus
 
   Follow the below steps to setup delfin with prometheus. Once your setup is ready, you can register the storage devices for performance monitoring. Later, the performance metrics can be viewed on prometheus server. This example also guides you to configure and update the targets and interval for scraping the metrics.
 
@@ -124,6 +117,6 @@ Example:
 
   ![](/DelfinPerformance/prometheus_dashboard2.png)
 
-##### What user should see
+#### What user should see
   1. Performance metrics data on prometheus server
   2. The graphs of performances of storage devices
