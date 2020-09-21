@@ -5,6 +5,7 @@ This is demo of SODA Foundations Delfin performance monitoring feature using def
 
 Delfin is a heterogeneous infrastructure management platform. It manages and monitors multiple storage backends from a single place. Prometheus is default platform integrated with delfin for monitoring the performances of the storages.
 
+This example help to setup delfin and prometheus together for POC. Once your setup is ready, you can registered the storage devices for performance monitoring. The performance metrics can be viewd on prometheus server. 
 
 Follow the below steps to setup delfin and prometheus or go through the demo [video](https://drive.google.com/file/d/1WMmLXQeNlToZd0DP5hCFtDZ1IbNJpO6B/view?usp=drivesdk) for the reference.
 
@@ -24,7 +25,7 @@ Example:
 root@root:/prometheus/prometheus-2.20.0.linux-amd64# ./prometheus
 ```
 
-2. Edit the prometheus.yml and set the appropriate target, interval and metrics_api   path. Below is sample example of prometheus.yml 
+2. Edit the prometheus.yml and set the appropriate target, interval and metrics_api   path. Below is sample example of prometheus.yml
 
   ###### prometheus.yml
 
@@ -60,7 +61,7 @@ Example:
 
   ![](/DelfinPerformance/metri-config-api.png)
 
-5. Below is sample python client program, which ect as webserver and exposes the collected metrics by exporter to prometheus server over https
+5. Run below client.py program to start webserver(it exposes the metrics to https server)
 
   ##### client.py
 
