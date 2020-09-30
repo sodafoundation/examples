@@ -103,7 +103,8 @@ Example:
   ![](/DelfinPerformance/metri-config-api.png)
 
 5. Run below client.py program to start webserver(it exposes the metrics to https server)
-
+  
+  Note: This client program not required from delfin release 1.0.0 onwards
   ##### client.py
 
   ```
@@ -135,6 +136,7 @@ Example:
   1. Performance metrics data on prometheus server
   2. The graphs of performances of storage devices
 
+##### Note: Kafka exporter is supported from delfin release 1.0.0 onwards.  
 
 #### How to setup kafka with delfin
 
