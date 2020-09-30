@@ -64,26 +64,40 @@ root@root:/prometheus/prometheus-2.20.0.linux-amd64# ./prometheus
    metrics_path: /metrics
    static_configs:
     - targets:
-            - localhost:5000
+            - localhost:8195
   ```
+
+
+#### Note:
+
+  There are two exporters supported as of now for performance collection, prometheus and kafka. To enable the exporters,
+  environment variable need to set as True. Whichever value is set as True, will be enabled for collection
+
+  Ex:
+   ```
+     export KAFKA=True
+     
+     export PROMETHEUS=True
+   ```
 
 3. Follow this [link](https://github.com/sodafoundation/delfin/blob/master/installer/README.md) to install delfin
 
+4. Register storage for performance collection
 
-4. Register and update performance metric collection(as of now only array metrics collection is supported) by using below API.
-```
-http://localhost:8190/v1/storages/storage_id/metrics-config
-```
-The body can be used to update the variables:
-```
-{
-  "array_polling": {
+    Use API to register the storages for performance collection
+
+    PUT http://localhost:8190/v1/storages/<storage_id>/metrics-config
+
+    body:
+    ```
+    {
+    "array_polling": {
     "perf_collection": true,
-    "interval": 6,
+    "interval": 900,
     "is_historic": true
     }
-}
-```
+    }
+   ```
 Example:
 
   ![](/DelfinPerformance/metri-config-api.png)
@@ -120,3 +134,55 @@ Example:
 #### What user should see
   1. Performance metrics data on prometheus server
   2. The graphs of performances of storage devices
+
+
+#### How to setup kafka with delfin
+
+1. [Download](https://www.apache.org/dyn/closer.cgi?path=/kafka/2.6.0/kafka_2.13-2.6.0.tgz) the latest kafka release and extract it:
+```
+$ tar -xzf kafka_2.13-2.6.0.tgz
+$ cd kafka_2.13-2.6.0
+```
+
+2. Start the kafka environment
+
+  ```
+  # Start the ZooKeeper service
+  # Note: Soon, ZooKeeper will no longer be required by Apache Kafka.
+  $ bin/zookeeper-server-start.sh config/zookeeper.properties
+  ```
+ Open another terminal session and run:
+
+ ```
+ # Start the Kafka broker service
+$ bin/kafka-server-start.sh config/server.properties
+ ```
+
+3. Create a topic to publish and subscribe metrics data
+
+  ```
+  bin/kafka-topics.sh --create --topic delfin-kafka --bootstrap-server localhost:9092
+  ```
+
+4. run the kafka consumer client to see the collected metrics data
+
+  kafka_consumer_client.py
+
+  ```
+  from kafka import KafkaConsumer
+  import json
+
+  def main():
+
+    consumer = KafkaConsumer(
+        'delfin-kafka',
+        bootstrap_servers=['localhost:9092'],
+        value_deserializer=lambda v: json.loads(v.decode('utf-8')))
+    print(consumer.metrics())
+    for message in consumer:
+        print(message)
+
+  if __name__ == '__main__':
+    main()
+
+  ```
