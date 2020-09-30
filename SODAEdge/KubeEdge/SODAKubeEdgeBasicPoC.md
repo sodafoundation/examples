@@ -9,7 +9,7 @@ SODA : [https://github.com/sodafoundation](https://github.com/sodafoundation)
 KubeEdge : [https://github.com/kubeedge](https://github.com/kubeedge)
 
 ### SODA @ Edge Design
-Please refer the the SODA@Edge Design Draft at https://github.com/sodafoundation/design-specs/tree/master/specs/soda-edge/SODAEdgeDesign.md
+Please refer the the SODA@Edge Design Draft at https://github.com/sodafoundation/design-specs/blob/master/specs/soda-edge/SODAEdgeAnalysisAndDesign.md
 
   
 # Basic Environment
