@@ -34,20 +34,23 @@ Version Considered : latest (26th Sep 2020) or 1.4.0 release
 ##### go lang 1.14+ needed
 -  	 Ref : [https://golang.org/doc/install](https://golang.org/doc/install)
 -   Create $HOME/go folder
+      
 	- cd /root (assuming this as home folder) 
 	- mkdir go (this is your workspace)
+	
 -   go download
 	- Downloaded [https://golang.org/dl/go1.15.2.linux-amd64.tar.gz](https://golang.org/dl/go1.15.2.linux-amd64.tar.gz)
-	- Or curl -O  [https://golang.org/dl/go1.15.2.linux-amd64.tar.gz](https://golang.org/dl/go1.15.2.linux-amd64.tar.gz)
+	Or 
+	- curl -O  [https://golang.org/dl/go1.15.2.linux-amd64.tar.gz](https://golang.org/dl/go1.15.2.linux-amd64.tar.gz)
 -   extract
 	-   tar -xvf go1.15.2.linux-amd64.tar.gz
 -   Adjust the access rights and move to /usr/local
-	-  	 chown -R root:root ./go
+	-   chown -R root:root ./go
 	-   mv go /usr/local
 -   export the paths
 	-   export GOPATH=$HOME/go
 	-   export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
-	-   OR
+	OR
 	-   Update ~/.profile with above exports and do
 	-   source ~/.profile
 `  		[Better to add in .profile file, so can use each exporter]
@@ -61,14 +64,14 @@ Version Considered : latest (26th Sep 2020) or 1.4.0 release
 	-   git version 2.17.1
   
 #####    Iptables
--   apt get install iptables
+-   apt-get install iptables
 	-   iptables is already the newest version (1.6.1-2ubuntu2).
 #####    openssl
    -   apt get install openssl
 	   -   openssl is already the newest version (1.1.1-1ubuntu2.1~18.04.6).
     
   #####   sudo
-   -   apt get install sudo
+   - apt-get install sudo
    - sudo --version
 	  - sudo version 1.8.21p2
        
@@ -266,7 +269,7 @@ Followed quick installation based on : [https://docs.sodafoundation.io/soda-gett
 	    -   host_ip: 192.168.1.100
 	    -   deploy_project: hotpot
 	    (We need only hotpot where api, controller, dock will be installed)
-		-   repo_branch: master
+	    -   repo_branch: master
 	    -   release_version: v1.0.0
 	-   sushi.yml
 		-   sushi_plugin_type: csi
@@ -513,7 +516,7 @@ Log:
   
   
 
--   Deploy the nginx test application which will creates and uses block storage using SODA CSI plugin
+-   Deploy the nginx test application which creates and uses block storage using SODA CSI plugin
     -   kubectl create -f /opt/opensds-sushi-linux-amd64/csi/examples/kubernetes/block/nginx.yaml
     Log:
 
@@ -587,7 +590,7 @@ nginx-block 0/1 ContainerCreating 0 5m33s <none> test-control-plane <none> <none
 
 -   PoC successfully shows the SODA and KubeEdge integration through CSI interface
     
--   It provides the design poc confirmation that KubeEdge can connect to heterogeneous storage backends through SODA CSI plugin (currently shown block storage. However it proves file as well)
+-   It provides the design PoC confirmation that KubeEdge can connect to heterogeneous storage backends through SODA CSI plugin (currently shown block storage. However it proves file as well)
     
 -   Currently the PoC is done on the same VM with KubeEdge (Cloud/Edge) and SODA components
     
