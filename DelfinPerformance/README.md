@@ -1,4 +1,4 @@
-## Delfin Performance Monitoring with Prometheus
+## Delfin Performance Monitoring with Prometheus & Kakfa
 
 This is a demo of SODA Foundations Delfin performance monitoring feature using default prometheus exporter.
 
@@ -136,7 +136,7 @@ Example:
   1. Performance metrics data on prometheus server
   2. The graphs of performances of storage devices
 
-##### Note: Kafka exporter is supported from delfin release 1.0.0 onwards.  
+##### Note: Kafka exporter is supported from delfin release 1.1.0 onwards.  
 
 #### How to setup kafka with delfin
 
