@@ -15,9 +15,7 @@ import sys
 
 import log
 from utils import config as cfg
-# need register global_opts
 import options
-# from data_parser import manager
 from data_parser import manager
 
 CONF = cfg.CONF
