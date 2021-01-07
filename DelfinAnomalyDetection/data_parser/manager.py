@@ -261,9 +261,11 @@ def process_data_dictionary():
                 anomaly = False
                 for x in anomalies:
                     if x:
-                        LOG.warning("Anomaly detected")
                         anomaly = True
-                LOG.info("Anomaly not detected")
+                        LOG.warning("Anomaly detected")
+                        break
+                if not anomaly:
+                    LOG.info("Anomaly not detected")
             else:
                 model = create_model(x_train)
                 train_model = training_model(model, x_train)

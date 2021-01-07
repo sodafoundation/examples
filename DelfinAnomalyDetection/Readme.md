@@ -21,10 +21,17 @@ Kafka is used data stream for receiving metric data which is plugged in into Ano
 
 ### Steps:
 - Setup Delfin and Kafka with help of [documentation](https://docs.sodafoundation.io/guides/developer-guides/delfin/)
-- install dependencies mentioned in requirements.txt
+- install dependencies mentioned in requirements.txt ```pip install -r requirements.txt```
 - export PYTHONPATH=`pwd`
 - python3 cmds/parser.py --config-file etc/anomaly_detection.conf
 
+### Output:
+- Anomalies are printed in logs
+- Anomaly not detected scenario:
+  ![alt text](./img/AnomalyNotDetected.JPG)
+    
+- Anomaly detected scenario:
+  ![alt text](./img/AnomalyDetected.JPG)
 
 ## Documentation
 
