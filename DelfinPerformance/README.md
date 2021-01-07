@@ -28,6 +28,15 @@ Now, the prometheus server comes and scrapes the metrics over this targeted path
 6. Users want to monitor and analyse the performance of storage-disks
 
 The detailed usecases with different metrics(like read_throughput, bandwidth etc.) and resourcetype(like array, pool etc.) are [here](https://github.com/sodafoundation/design-specs/blob/dcdee7b67d4a4ee74f065f00b2e93efb22f2493a/specs/SIM/PerfomanceMontoringDesign.md)
+#### Note:
+
+  There are two exporters supported as of now for performance collection, prometheus and kafka. Uncomment performance_exporters option in <delfin_path>/etc/delffin/delfin.conf as below to enable exporter for prometheus and kafka  
+
+  Ex:
+   ```
+# Uncomment or add exporters
+performance_exporters = PerformanceExporterPrometheus, PerformanceExporterKafka
+   ```
 
 #### How to setup delfin with prometheus
 
@@ -66,77 +75,6 @@ root@root:/prometheus/prometheus-2.20.0.linux-amd64# ./prometheus
     - targets:
             - localhost:8195
   ```
-
-
-#### Note:
-
-  There are two exporters supported as of now for performance collection, prometheus and kafka. To enable the exporters,
-  environment variable need to set as True. Whichever value is set as True, will be enabled for collection
-
-  Ex:
-   ```
-     export KAFKA=True
-     
-     export PROMETHEUS=True
-   ```
-
-3. Follow this [link](https://github.com/sodafoundation/delfin/blob/master/installer/README.md) to install delfin
-
-4. Register storage for performance collection
-
-    Use API to register the storages for performance collection
-
-    PUT http://localhost:8190/v1/storages/<storage_id>/metrics-config
-
-    body:
-    ```
-    {
-    "array_polling": {
-    "perf_collection": true,
-    "interval": 900,
-    "is_historic": true
-    }
-    }
-   ```
-Example:
-
-  ![](/DelfinPerformance/metri-config-api.png)
-
-5. Run below client.py program to start webserver(it exposes the metrics to https server)
-  
-  Note: This client program not required from delfin release 1.0.0 onwards
-  ##### client.py
-
-  ```
-  from flask import Flask
-
-  app = Flask(__name__)
-
-  @app.route("/metrics", methods=['GET'])
-  def getfile():
-    with open("/var/lib/delfin/delfin_exporter.txt", "r+") as f:
-        data = f.read()
-    return data
-
-  if __name__ == '__main__':
-      app.run(host='localhost')
-  ```
-
-6. Now, the collected metrics can be seen on prometheus server
-
-  Example1:
-
-  ![](/DelfinPerformance/prometheus_dashboard.png)
-
-  Example 2:
-
-  ![](/DelfinPerformance/prometheus_dashboard2.png)
-
-#### What user should see
-  1. Performance metrics data on prometheus server
-  2. The graphs of performances of storage devices
-
-##### Note: Kafka exporter is supported from delfin release 1.1.0 onwards.  
 
 #### How to setup kafka with delfin
 
@@ -188,3 +126,45 @@ $ bin/kafka-server-start.sh config/server.properties
     main()
 
   ```
+
+### Installi Delfin and start performance collection
+
+
+3. Follow this [link](https://github.com/sodafoundation/delfin/blob/master/installer/README.md) to install delfin
+
+4. Register storage for performance collection
+
+    Use API to register the storages for performance collection
+
+    PUT http://localhost:8190/v1/storages/<storage_id>/metrics-config
+
+    body:
+    ```
+    {
+    "array_polling": {
+    "perf_collection": true,
+    "interval": 900,
+    "is_historic": true
+    }
+    }
+   ```
+Example:
+
+  ![](/DelfinPerformance/metri-config-api.png)
+
+
+
+  Example1:
+
+  ![](/DelfinPerformance/prometheus_dashboard.png)
+
+  Example 2:
+
+  ![](/DelfinPerformance/prometheus_dashboard2.png)
+
+#### What user should see
+  1. Performance metrics data on prometheus server
+  2. The graphs of performances of storage devices
+
+##### Note: Kafka exporter is supported from delfin release 1.1.0 onwards.  
+
