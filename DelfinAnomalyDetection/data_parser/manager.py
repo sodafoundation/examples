@@ -43,7 +43,7 @@ data_parser_opts = [
 
 CONF.register_opts(data_parser_opts, "data_parser")
 
-DATA_ENTRIES_COUNT = 500
+DATA_ENTRIES_COUNT = 1000
 
 class DataReceiver(base.Base):
     def __init__(self, name):
@@ -225,7 +225,7 @@ def training_model(model, x_train):
     return model
 
 
-SLEEP_SEC = 15
+SLEEP_SEC = 60
 
 
 def process_data_dictionary():
