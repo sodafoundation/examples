@@ -127,7 +127,7 @@ $ bin/kafka-server-start.sh config/server.properties
 
   ```
 
-### Installi Delfin and start performance collection
+### Install Delfin and start performance collection
 
 
 3. Follow this [link](https://github.com/sodafoundation/delfin/blob/master/installer/README.md) to install delfin
