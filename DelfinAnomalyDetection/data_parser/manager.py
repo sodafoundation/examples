@@ -30,14 +30,11 @@ CONF = cfg.CONF
 
 
 data_parser_opts = [
-    cfg.StrOpt('csv_file_name',
-               default='performance.csv',
-               help='Data receiver source file name'),
     cfg.StrOpt('kafka_bootstrap_servers',
                default='localhost:9092',
                help='kafka bootstrap server'),
     cfg.StrOpt('kafka_topic',
-               default='metrics',
+               default='delfin-kafka',
                help='kafka topic'),
     cfg.IntOpt('kafka_retry_num',
                default=3,
@@ -46,6 +43,7 @@ data_parser_opts = [
 
 CONF.register_opts(data_parser_opts, "data_parser")
 
+DATA_ENTRIES_COUNT = 500
 
 class DataReceiver(base.Base):
     def __init__(self, name):
@@ -67,15 +65,15 @@ class DataDictionary:
         return self.dict
 
     def update(self, key, value):
-        # LOG.info("Update %s ", key)
         if key in self.dict.keys():
-            # sample only 1000 entries
-            if len(self.dict[key]) >= 1000:
+            # sample only DATA_ENTRIES_COUNT
+            if len(self.dict[key]) >= DATA_ENTRIES_COUNT:
                 self.dict[key].pop(0)
-            self.dict[key].append(value)
         else:
             self.dict[key] = []
-            self.dict[key].append(value)
+
+        LOG.debug("Updating metric for %s with %s", key, value)
+        self.dict[key].append(value)
 
     def has_key(self, key):
         return key in self.dict.keys()
@@ -142,11 +140,9 @@ def create_sequences(values, time_steps=TIME_STEPS):
     return np.stack(output)
 
 
-## Visualize the data
-### Timeseries data without anomalies
+# Visualize the data
+# Timeseries data without anomalies
 def create_training_value(key, values):
-    # value = [elem for elem in data[2].values()][0]
-    # LOG.info("%s = %f", data[0], value)
     train_data = {}
     for value in values:
         val_keys = list(value.keys())[0]
@@ -154,20 +150,23 @@ def create_training_value(key, values):
 
     train_df = pd.DataFrame.from_dict(train_data, orient='index', columns=['read_bandwidth'])
 
-    if (len(values) < 1000) or (training_dictionary.get(key) == None):
+    if training_dictionary.has_key(key):
+        # if training is already available, case of checking anomaly
+        train_dict = training_dictionary.get(key)
+        df_training_value = (train_df - train_dict.get('Mean')) / train_dict.get('STD')
+        x_train = create_sequences(df_training_value.values)
+        LOG.info("Training input shape for anomaly detection: %s", x_train.shape)
+        return x_train
+    else:
+        # case for first time training
         training_mean = train_df.mean()
         training_std = train_df.std()
         training_dictionary.update(key, {'Mean': training_mean, 'STD': training_std})
         df_training_value = (train_df - training_mean) / training_std
         x_train = create_sequences(df_training_value.values)
-        LOG.info("Training input shape: %s", x_train.shape)
+        LOG.info("Training input shape for training: %s", x_train.shape)
         return x_train
-    else:
-        train_dict = training_dictionary.get(key)
-        df_training_value = (train_df - train_dict.get('Mean')) / train_dict.get('STD')
-        x_train = create_sequences(df_training_value.values)
-        LOG.info("Training input shape: %s", x_train.shape)
-        return x_train
+
 
 def create_model(x_train):
     """
@@ -177,7 +176,6 @@ def create_model(x_train):
     output of the same shape. In this case, `sequence_length` is 288 and
     `num_features` is 1.
     """
-
     model = tf.keras.Sequential(
         [
             tf.keras.layers.Input(shape=(x_train.shape[1], x_train.shape[2])),
@@ -200,7 +198,7 @@ def create_model(x_train):
     )
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="mse")
-    model.summary()
+    # model.summary()
 
     return model
 
@@ -211,7 +209,6 @@ def training_model(model, x_train):
     Please note that we are using `x_train` as both the input and the target
     since this is a reconstruction model.
     """
-
     history = model.fit(
         x_train,
         x_train,
@@ -223,25 +220,51 @@ def training_model(model, x_train):
         ],
     )
 
-    LOG.info("Loss in training %s ", history.history["loss"])
-    LOG.info("Validation loss in training %s ", history.history["val_loss"])
+    LOG.debug("Loss in training %s ", history.history["loss"])
+    LOG.debug("Validation loss in training %s ", history.history["val_loss"])
     return model
+
+
+SLEEP_SEC = 15
 
 
 def process_data_dictionary():
     while True:
-        LOG.info("--------------> Sleeping for 1 min <--------- ")
-        time.sleep(15)
+        LOG.info("--------------> Sleeping for %s sec <--------- ", SLEEP_SEC)
+        time.sleep(SLEEP_SEC)
 
         data_dict = data_dictionary.get()
         for key in data_dict:
             # Storage ID is key
-            LOG.info("Creating training value for %s ", key)
 
+            LOG.info("Processing storage[%s] metrics", key)
+
+            # Skip processing if entries less than DATA_ENTRIES_COUNT
+            if data_dictionary.len(key) < DATA_ENTRIES_COUNT:
+                LOG.info("Skipping processing as entries are less for storage[%s] len(%s)", key, data_dictionary.len(key))
+                continue
+
+            # Training values
             x_train = create_training_value(key, data_dict[key])
 
-            if training_dictionary.get(key) == None or \
-                    training_dictionary.get(key).get('Threshold') == None:
+            if training_dictionary.has_key(key) and 'Threshold' in training_dictionary.get(key).keys():
+                # get the prediction
+                x_test_pred = model_dictionary.get(key).predict(x_train)
+                test_mae_loss = np.mean(np.abs(x_test_pred - x_train), axis=1)
+                test_mae_loss = test_mae_loss.reshape((-1))
+
+                # print anomalies
+                threshold = training_dictionary.get(key)['Threshold']
+                anomalies = test_mae_loss > threshold
+
+                # Check for anomaly
+                anomaly = False
+                for x in anomalies:
+                    if x:
+                        LOG.warning("Anomaly detected")
+                        anomaly = True
+                LOG.info("Anomaly not detected")
+            else:
                 model = create_model(x_train)
                 train_model = training_model(model, x_train)
 
@@ -257,16 +280,6 @@ def process_data_dictionary():
                 training_dictionary.add_entry(key, 'Threshold', threshold)
                 LOG.info("Training loss threshold : %s", threshold)
 
-            else:
-                # get the anomalies
-                x_test_pred = model_dictionary.get(key).predict(x_train)
-                test_mae_loss = np.mean(np.abs(x_test_pred - x_train), axis=1)
-                test_mae_loss = test_mae_loss.reshape((-1))
-
-                # print anomalies
-                threshold = training_dictionary.get(key)['Threshold']
-                anomalies = test_mae_loss > threshold
-                LOG.warning("Anomalies : %s", anomalies)
 
 
 class KafkaDataReceiver(DataReceiver):
@@ -280,10 +293,14 @@ class KafkaDataReceiver(DataReceiver):
 
         for msg in consumer:
             perf = json.loads(msg.value)
+            # Extract storage_id
             storage_id = [elem for elem in perf[0][1].values()][0]
-            # LOG.info("storage_id : %s", storage_id)
+            LOG.debug("Adding metric for storage_id : %s", storage_id)
             for data in perf:
                 if data[0] == 'read_bandwidth':
+                    LOG.debug("Data to be updated : %s", [elem for elem in data[2].values()][0])
+                    if [elem for elem in data[2].values()][0] > 100:
+                        LOG.warning("Should detect anomaly for [%s]", storage_id)
                     data_dictionary.update(storage_id, data[2])
                     break
 

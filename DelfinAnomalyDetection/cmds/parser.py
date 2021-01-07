@@ -22,7 +22,7 @@ CONF = cfg.CONF
 
 data_parser_opts = [
     cfg.StrOpt('receiver_name',
-               default='csv',
+               default='kafka',
                help='Data receiver name')
 ]
 
