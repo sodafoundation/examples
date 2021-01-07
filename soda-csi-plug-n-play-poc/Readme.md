@@ -287,6 +287,87 @@ I0920 21:12:20.188670       1 request.go:1017] Request Body: {"kind":"Persistent
 
 ```
 
-
 ***Note***: 
 The Deployment scripts for plugins and operators has been take from https://github.com/IBM/ibm-block-csi-operator and https://github.com/wavezhang/k8s-csi-lvm . 
+
+
+#### Experimenting with other CSI drivers
+##### Ceph RBD CSI driver
+###### Step1:
+Deploy Ceph RBD CSI driver along with soda-csi-provisioner
+```
+kubectl create -f deploy/kubernetes/cephcsi/rbd
+
+kubectl get pods
+NAME                                         READY   STATUS    RESTARTS   AGE
+csi-rbdplugin-6pw9z                          3/3     Running   0          7s
+csi-rbdplugin-provisioner-6b8b9d99fd-x4wn6   7/7     Running   0          7s
+ 
+```
+###### Step2:
+Deploy StorageClass and PVC with profile as 'rbd.csi.ceph.com'
+```go
+kubectl create -f deploy/kubernetes/demo
+```
+```go
+kubectl get sc soda-high-io -o yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  creationTimestamp: "2021-01-07T10:31:11Z"
+  name: soda-high-io
+  resourceVersion: "13934"
+  selfLink: /apis/storage.k8s.io/v1/storageclasses/soda-high-io
+  uid: 75e47bca-50d3-11eb-a5ff-080027310244
+parameters:
+  profile: rbd.csi.ceph.com
+provisioner: soda-csi
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+```
+
+StorageClass is created as shown above but the PVC will fail as the Ceph backend is not available and the soda-csi-provisioner will send an error.
+
+`Ceph RBD soda-csi-provisioner logs`
+
+```go
+kubectl logs csi-rbdplugin-provisioner-6b8b9d99fd-x4wn6 csi-provisioner 
+I0107 10:31:19.485001       1 controller.go:1284] provision "default/demo-pvc-file-system" class "soda-high-io": started
+I0107 10:31:19.488100       1 connection.go:182] GRPC call: /csi.v1.Identity/GetPluginInfo
+I0107 10:31:19.488114       1 connection.go:183] GRPC request: {}
+I0107 10:31:19.489971       1 event.go:281] Event(v1.ObjectReference{Kind:"PersistentVolumeClaim", Namespace:"default", Name:"demo-pvc-file-system", UID:"75e213de-50d3-11eb-a5ff-080027310244", APIVersion:"v1", ResourceVersion:"13950", FieldPath:""}): type: 'Normal' reason: 'Provisioning' External provisioner is provisioning volume for claim "default/demo-pvc-file-system"
+I0107 10:31:19.490741       1 connection.go:185] GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
+I0107 10:31:19.491201       1 connection.go:186] GRPC error: <nil>
+I0107 10:31:19.491975       1 controller.go:462] The Backend Driver Name and provisioner name is : rbd.csi.ceph.com , soda-csi
+I0107 10:31:19.492053       1 controller.go:466] The parameters in the StorageClass are  : profile ===== rbd.csi.ceph.com
+
+I0107 10:31:19.515052       1 controller.go:620] CreateVolumeRequest {Name:pvc-75e213de-50d3-11eb-a5ff-080027310244 CapacityRange:required_bytes:2147483648  VolumeCapabilities:[mount:<fs_type:"ext4" > access_mode:<mode:SINGLE_NODE_WRITER > ] Parameters:map[profile:rbd.csi.ceph.com] Secrets:map[] VolumeContentSource:<nil> AccessibilityRequirements:<nil> XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0}
+I0107 10:31:19.515216       1 connection.go:182] GRPC call: /csi.v1.Controller/CreateVolume
+I0107 10:31:19.515269       1 connection.go:183] GRPC request: {"capacity_range":{"required_bytes":2147483648},"name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","parameters":{"csi.storage.k8s.io/pv/name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","csi.storage.k8s.io/pvc/name":"demo-pvc-file-system","csi.storage.k8s.io/pvc/namespace":"default","profile":"rbd.csi.ceph.com"},"volume_capabilities":[{"AccessType":{"Mount":{"fs_type":"ext4"}},"access_mode":{"mode":1}}]}
+
+```
+
+Ceph driver is triggered for volume creation.
+
+`Ceph RBD driver logs`
+
+```go
+kubectl logs csi-rbdplugin-provisioner-6b8b9d99fd-x4wn6 csi-rbdplugin
+I0107 10:31:06.447514       1 utils.go:132] ID: 19 GRPC call: /csi.v1.Identity/Probe
+I0107 10:31:06.447889       1 utils.go:133] ID: 19 GRPC request: {}
+I0107 10:31:06.449711       1 utils.go:138] ID: 19 GRPC response: {}
+I0107 10:31:19.490255       1 utils.go:132] ID: 20 GRPC call: /csi.v1.Identity/GetPluginInfo
+I0107 10:31:19.490396       1 utils.go:133] ID: 20 GRPC request: {}
+I0107 10:31:19.490462       1 identityserver-default.go:36] ID: 20 Using default GetPluginInfo
+I0107 10:31:19.490541       1 utils.go:138] ID: 20 GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
+I0107 10:31:19.520057       1 utils.go:132] ID: 21 Req-ID: pvc-75e213de-50d3-11eb-a5ff-080027310244 GRPC call: /csi.v1.Controller/CreateVolume
+I0107 10:31:19.535219       1 utils.go:133] ID: 21 Req-ID: pvc-75e213de-50d3-11eb-a5ff-080027310244 GRPC request: {"capacity_range":{"required_bytes":2147483648},"name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","parameters":{"csi.storage.k8s.io/pv/name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","csi.storage.k8s.io/pvc/name":"demo-pvc-file-system","csi.storage.k8s.io/pvc/namespace":"default","profile":"rbd.csi.ceph.com"},"volume_capabilities":[{"AccessType":{"Mount":{"fs_type":"ext4"}},"access_mode":{"mode":1}}]}
+
+```
+
+
+***Note***: 
+The Deployment scripts for ceph rbd driver are taken from https://github.com/ceph/ceph-csi . 
+
+
