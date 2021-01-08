@@ -371,3 +371,35 @@ I0107 10:31:19.535219       1 utils.go:133] ID: 21 Req-ID: pvc-75e213de-50d3-11e
 The Deployment scripts for ceph rbd driver are taken from https://github.com/ceph/ceph-csi . 
 
 
+## Simple steps to integrate and experiment any csi driver
+
+### Step 1
+Retrieve the deployments scripts/mechanism for the respective csi driver.
+Update the csi provisioner image used with the soda csi provisioner image(sodafoundation/soda-csi-provisioner:v1.6.0).
+
+### Step 2
+Deploy the respective csi driver. If the driver is already deployed, it can be patched by editing deployment after replacing the image (step 1). 
+
+### Step 3
+Create soda profile corresponding the driver getting added . Then involves mentioning driver name in profile. Reference provided [here](https://youtu.be/ytXY_dKQCYg). This will help to identify the driver for which volume provisioning is requested for.
+
+### Step 4
+Create storage class specifying the above profile as shown in below example. Then proceed with Volume provisioning (pvc).
+```go
+kubectl get sc soda-high-io -o yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  creationTimestamp: "2021-01-07T10:31:11Z"
+  name: soda-high-io
+  resourceVersion: "13934"
+  selfLink: /apis/storage.k8s.io/v1/storageclasses/soda-high-io
+  uid: 75e47bca-50d3-11eb-a5ff-080027310244
+parameters:
+  profile: rbd.csi.ceph.com
+provisioner: soda-csi
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+```
+
