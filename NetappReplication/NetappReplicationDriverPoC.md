@@ -1,4 +1,4 @@
-# Volume based replication with SODA Netapp driver PoC
+# PoC for NetApp Volume replication using SODA Driver
 
 
 # Introduction
@@ -25,12 +25,13 @@ git clone https://github.com/sodafoundation/controller.git
 git clone https://github.com/sodafoundation/dock.git
 ```
 
-2. Add the driver codes in dock repo:
+2. Add the driver codes in dock repo(here two new files need to add replication.go and cli.go):
 
+```
  $GOPATH/dock/contrib/drivers/netapp/ontap/dock/contrib/drivers/netapp/ontap/replication.go
 
  $GOPATH/dock/contrib/drivers/netapp/ontap/dock/contrib/drivers/netapp/ontap/cli.go
-
+```
 
  3. Modify replication_driver.go file and add for netapp driver in dock repo.
 
@@ -42,12 +43,12 @@ git clone https://github.com/sodafoundation/dock.git
          "github.com/sodafoundation/dock/contrib/drivers/netapp/ontap"
 )
 ```
-b. NetappDRBDDriverType drivertype
+b. NetappDriverType drivertype
 ```
  func InitReplicationDriver(resourceType string) (ReplicationDriver, error) {
         var d ReplicationDriver
         switch resourceType {
-       case driversConfig.NetappDRBDDriverType:
+       case driversConfig.NetappDriverType:
                d = &ontap.ReplicationDriver{}
                break
         case driversConfig.DRBDDriverType:
@@ -157,3 +158,5 @@ osdsctl volume replication list
 
 ##### 5. The created replication is now available on netapp backened
 ![](snapmirror-show.png)
+
+Note: This PoC is tested on single node simulator cluster of netapp with same aggregate on a SVM

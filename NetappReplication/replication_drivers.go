@@ -67,7 +67,7 @@ func IsSupportArrayBasedReplication(resourceType string) bool {
 func InitReplicationDriver(resourceType string) (ReplicationDriver, error) {
 	var d ReplicationDriver
 	switch resourceType {
-	case driversConfig.NetappDRBDDriverType:
+	case driversConfig.NetappDriverType:
 		d = &ontap.ReplicationDriver{}
 		break
 	case driversConfig.DRBDDriverType:
