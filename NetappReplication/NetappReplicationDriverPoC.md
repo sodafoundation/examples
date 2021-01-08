@@ -3,7 +3,10 @@
 
 # Introduction
 
-This adds a new driver to SODA dock to support volume based replication.
+This provides a basic integration of netapp driver for replication and SODA. SODA already supports host and array based replication for different storage vendors(ex: Huawei, DRBD, ScutechCMS etc.). This POC enable to enhance the list of drivers to support replication basic feature.
+
+The drivers to support replication and other features are available in SODA Dock repo.
+
 ###  Github:
 SODA : [https://github.com/sodafoundation](https://github.com/sodafoundation)
 
@@ -14,7 +17,7 @@ SODA Dock: https://github.com/sodafoundation/dock
 
 To test and use this POC, SODA should be installed with netapp basic driver. Please follow the below steps:
 
-1. Cloned all the three repo(api controller and dock):
+1. Clone all the three repo(api controller and dock):
 
 ```
 git clone https://github.com/sodafoundation/api.git
