@@ -402,10 +402,15 @@ volumeBindingMode: Immediate
 ```
 
 StorageClass is created as shown above and the PVC creation will proceed as the profile matches to CEPH.
-`Ceph RBD soda-csi-provisioner logs`
-
+```go
+Ceph RBD soda-csi-provisioner logs
+```
 ```go
 kubectl logs csi-rbdplugin-provisioner-68b5cdf677-rlhqq csi-provisioner
+.
+.
+.
+.
 W0427 04:14:53.391436       1 feature_gate.go:235] Setting GA feature gate Topology=false. It will be removed in a future release.
 I0427 04:14:53.391654       1 feature_gate.go:243] feature gates: &{map[Topology:false]}
 I0427 04:14:53.391844       1 csi-provisioner.go:132] Version:
@@ -478,6 +483,10 @@ Ceph driver is triggered for volume creation.
 
 ```go
 kubectl logs  csi-rbdplugin-provisioner-68b5cdf677-rlhqq csi-rbdplugin
+.
+.
+.
+.
 I0427 04:15:56.980031       1 identityserver-default.go:36] ID: 16 Using default GetPluginInfo
 I0427 04:15:56.980104       1 utils.go:173] ID: 16 GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
 I0427 04:15:56.994114       1 utils.go:162] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d GRPC call: /csi.v1.Controller/CreateVolume
