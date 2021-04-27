@@ -305,46 +305,170 @@ csi-rbdplugin-provisioner-6b8b9d99fd-x4wn6   7/7     Running   0          7s
  
 ```
 ###### Step2:
-Deploy StorageClass and PVC with profile as 'rbd.csi.ceph.com'
+Deploy Secret with UserID and UserKey of the CEPH user
 ```go
-kubectl create -f deploy/kubernetes/demo
+kubectl create -f deploy/kubernetes/ceph/secret.yaml
 ```
 ```go
-kubectl get sc soda-high-io -o yaml
+kubectl get secret csi-rbd-secret -o yaml
+apiVersion: v1
+data:
+userID: a3ViZQ==
+userKey: QVFEalpZRmdPdy9GRnhBQVNXcFJKeitIMHlJM0xVNHg2Q3QyekE9PQ==
+kind: Secret
+metadata:
+creationTimestamp: "2021-04-27T04:14:33Z"
+managedFields:
+- apiVersion: v1
+fieldsType: FieldsV1
+fieldsV1:
+f:data:
+.: {}
+f:userID: {}
+f:userKey: {}
+f:type: {}
+manager: kubectl-create
+operation: Update
+time: "2021-04-27T04:14:33Z"
+name: csi-rbd-secret
+namespace: default
+resourceVersion: "229355"
+uid: 6db441a0-53ed-480c-806d-2c2982301022
+type: Opaque
+
+```
+
+###### Step3:
+Deploy StorageClass, PVC and POD with profile ID having "driver": "rbd.csi.ceph.com" in CustomProperties of a Profile.
+```go
+kubectl create -f deploy/kubernetes/ceph
+```
+```go
+kubectl get sc csi-rbd-ceph-sc -o yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  creationTimestamp: "2021-01-07T10:31:11Z"
-  name: soda-high-io
-  resourceVersion: "13934"
-  selfLink: /apis/storage.k8s.io/v1/storageclasses/soda-high-io
-  uid: 75e47bca-50d3-11eb-a5ff-080027310244
+creationTimestamp: "2021-04-27T04:15:54Z"
+managedFields:
+- apiVersion: storage.k8s.io/v1
+fieldsType: FieldsV1
+fieldsV1:
+f:mountOptions: {}
+f:parameters:
+.: {}
+f:attachMode: {}
+f:clusterID: {}
+f:csi.storage.k8s.io/controller-expand-secret-name: {}
+f:csi.storage.k8s.io/controller-expand-secret-namespace: {}
+f:csi.storage.k8s.io/fstype: {}
+f:csi.storage.k8s.io/node-stage-secret-name: {}
+f:csi.storage.k8s.io/node-stage-secret-namespace: {}
+f:csi.storage.k8s.io/provisioner-secret-name: {}
+f:csi.storage.k8s.io/provisioner-secret-namespace: {}
+f:imageFeatures: {}
+f:imageFormat: {}
+f:pool: {}
+f:profile: {}
+f:provisioner: {}
+f:reclaimPolicy: {}
+f:volumeBindingMode: {}
+manager: kubectl-create
+operation: Update
+time: "2021-04-27T04:15:54Z"
+name: csi-rbd-ceph-sc
+resourceVersion: "229530"
+uid: 818d0dfc-fe46-43f2-aa7a-255d8f5d93d6
+mountOptions:
+- discard
 parameters:
-  profile: rbd.csi.ceph.com
+attachMode: rw
+clusterID: 4ac5251b-114f-4044-9bec-2d27fadad502
+csi.storage.k8s.io/controller-expand-secret-name: csi-rbd-secret
+csi.storage.k8s.io/controller-expand-secret-namespace: default
+csi.storage.k8s.io/fstype: ext4
+csi.storage.k8s.io/node-stage-secret-name: csi-rbd-secret
+csi.storage.k8s.io/node-stage-secret-namespace: default
+csi.storage.k8s.io/provisioner-secret-name: csi-rbd-secret
+csi.storage.k8s.io/provisioner-secret-namespace: default
+imageFeatures: layering
+imageFormat: "2"
+pool: osdsrbd
+profile: f63a7fcc-6e83-49cc-81c1-8627fc8e0f52
 provisioner: soda-csi
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 
+
 ```
 
-StorageClass is created as shown above but the PVC will fail as the Ceph backend is not available and the soda-csi-provisioner will send an error.
-
+StorageClass is created as shown above and the PVC creation will proceed as the profile matches to CEPH.
 `Ceph RBD soda-csi-provisioner logs`
 
 ```go
-kubectl logs csi-rbdplugin-provisioner-6b8b9d99fd-x4wn6 csi-provisioner 
-I0107 10:31:19.485001       1 controller.go:1284] provision "default/demo-pvc-file-system" class "soda-high-io": started
-I0107 10:31:19.488100       1 connection.go:182] GRPC call: /csi.v1.Identity/GetPluginInfo
-I0107 10:31:19.488114       1 connection.go:183] GRPC request: {}
-I0107 10:31:19.489971       1 event.go:281] Event(v1.ObjectReference{Kind:"PersistentVolumeClaim", Namespace:"default", Name:"demo-pvc-file-system", UID:"75e213de-50d3-11eb-a5ff-080027310244", APIVersion:"v1", ResourceVersion:"13950", FieldPath:""}): type: 'Normal' reason: 'Provisioning' External provisioner is provisioning volume for claim "default/demo-pvc-file-system"
-I0107 10:31:19.490741       1 connection.go:185] GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
-I0107 10:31:19.491201       1 connection.go:186] GRPC error: <nil>
-I0107 10:31:19.491975       1 controller.go:462] The Backend Driver Name and provisioner name is : rbd.csi.ceph.com , soda-csi
-I0107 10:31:19.492053       1 controller.go:466] The parameters in the StorageClass are  : profile ===== rbd.csi.ceph.com
+kubectl logs csi-rbdplugin-provisioner-68b5cdf677-rlhqq csi-provisioner
+W0427 04:14:53.391436       1 feature_gate.go:235] Setting GA feature gate Topology=false. It will be removed in a future release.
+I0427 04:14:53.391654       1 feature_gate.go:243] feature gates: &{map[Topology:false]}
+I0427 04:14:53.391844       1 csi-provisioner.go:132] Version:
+I0427 04:14:53.393313       1 csi-provisioner.go:155] Building kube configs for running in cluster...
+I0427 04:14:54.573753       1 connection.go:153] Connecting to unix:///csi/csi-provisioner.sock
+I0427 04:14:56.722717       1 common.go:111] Probing CSI driver for readiness
+I0427 04:14:56.722774       1 connection.go:182] GRPC call: /csi.v1.Identity/Probe
+I0427 04:14:56.722789       1 connection.go:183] GRPC request: {}
+I0427 04:14:56.975155       1 connection.go:185] GRPC response: {}
+I0427 04:14:56.975305       1 connection.go:186] GRPC error: <nil>
+I0427 04:14:56.975333       1 csi-provisioner.go:199] Detected CSI driver soda-csi
+I0427 04:14:56.975356       1 connection.go:182] GRPC call: /csi.v1.Identity/GetPluginCapabilities
+I0427 04:14:56.975368       1 connection.go:183] GRPC request: {}
+I0427 04:14:57.049960       1 connection.go:185] GRPC response: {"capabilities":[{"Type":{"Service":{"type":1}}},{"Type":{"VolumeExpansion":{"type":1}}},{"Type":{"Service":{"type":2}}}]}
+I0427 04:14:57.050220       1 connection.go:186] GRPC error: <nil>
+I0427 04:14:57.050247       1 connection.go:182] GRPC call: /csi.v1.Controller/ControllerGetCapabilities
+I0427 04:14:57.050260       1 connection.go:183] GRPC request: {}
+I0427 04:14:57.051604       1 connection.go:185] GRPC response: {"capabilities":[{"Type":{"Rpc":{"type":1}}},{"Type":{"Rpc":{"type":5}}},{"Type":{"Rpc":{"type":7}}},{"Type":{"Rpc":{"type":9}}}]}
+I0427 04:14:57.051754       1 connection.go:186] GRPC error: <nil>
+I0427 04:14:57.231707       1 csi-provisioner.go:241] CSI driver does not support PUBLISH_UNPUBLISH_VOLUME, not watching VolumeAttachments
+I0427 04:14:57.333851       1 controller.go:756] Using saving PVs to API server in background
+I0427 04:14:57.392443       1 reflector.go:219] Starting reflector *v1.PersistentVolumeClaim (15m0s) from k8s.io/client-go/informers/factory.go:134
+I0427 04:14:57.392512       1 reflector.go:255] Listing and watching *v1.PersistentVolumeClaim from k8s.io/client-go/informers/factory.go:134
+I0427 04:14:57.392539       1 reflector.go:219] Starting reflector *v1.StorageClass (1h0m0s) from k8s.io/client-go/informers/factory.go:134
+I0427 04:14:57.393093       1 reflector.go:255] Listing and watching *v1.StorageClass from k8s.io/client-go/informers/factory.go:134
+I0427 04:14:57.634197       1 shared_informer.go:270] caches populated
+I0427 04:14:57.634232       1 shared_informer.go:270] caches populated
+I0427 04:14:57.634266       1 controller.go:835] Starting provisioner controller soda-csi_csi-rbdplugin-provisioner-68b5cdf677-rlhqq_79ddf7a3-6411-4213-a9ba-a19b6ca12d44!
+I0427 04:14:57.634379       1 clone_controller.go:66] Starting CloningProtection controller
+I0427 04:14:57.634442       1 clone_controller.go:84] Started CloningProtection controller
+I0427 04:14:57.634730       1 volume_store.go:97] Starting save volume queue
+I0427 04:14:57.634790       1 reflector.go:219] Starting reflector *v1.PersistentVolumeClaim (15m0s) from github.com/kubernetes-csi/external-provisioner/pkg/controller/clone_controller.go:82
+I0427 04:14:57.635099       1 reflector.go:255] Listing and watching *v1.PersistentVolumeClaim from github.com/kubernetes-csi/external-provisioner/pkg/controller/clone_controller.go:82
+I0427 04:14:57.635049       1 reflector.go:219] Starting reflector *v1.StorageClass (15m0s) from sigs.k8s.io/sig-storage-lib-external-provisioner/v6/controller/controller.go:872
+I0427 04:14:57.635287       1 reflector.go:255] Listing and watching *v1.StorageClass from sigs.k8s.io/sig-storage-lib-external-provisioner/v6/controller/controller.go:872
+I0427 04:14:57.635200       1 reflector.go:219] Starting reflector *v1.PersistentVolume (15m0s) from sigs.k8s.io/sig-storage-lib-external-provisioner/v6/controller/controller.go:869
+I0427 04:14:57.635728       1 reflector.go:255] Listing and watching *v1.PersistentVolume from sigs.k8s.io/sig-storage-lib-external-provisioner/v6/controller/controller.go:869
+I0427 04:14:57.734504       1 shared_informer.go:270] caches populated
+I0427 04:14:57.735220       1 controller.go:884] Started provisioner controller soda-csi_csi-rbdplugin-provisioner-68b5cdf677-rlhqq_79ddf7a3-6411-4213-a9ba-a19b6ca12d44!
+I0427 04:15:54.469345       1 controller.go:1332] provision "default/raw-block-pvc" class "csi-rbd-ceph-sc": started
+I0427 04:15:54.470475       1 event.go:282] Event(v1.ObjectReference{Kind:"PersistentVolumeClaim", Namespace:"default", Name:"raw-block-pvc", UID:"8ea03417-9275-45c8-b92e-58c467ccbf8d", APIVersion:"v1", ResourceVersion:"229533", FieldPath:""}): type: 'Normal' reason: 'Provisioning' External provisioner is provisioning volume for claim "default/raw-block-pvc"
+I0427 04:15:56.978651       1 connection.go:182] GRPC call: /csi.v1.Identity/GetPluginInfo
+I0427 04:15:56.978691       1 connection.go:183] GRPC request: {}
+I0427 04:15:56.980624       1 connection.go:185] GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
+I0427 04:15:56.980736       1 connection.go:186] GRPC error: <nil>
+I0427 04:15:56.990564       1 controller.go:801] CreateVolumeRequest name:"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d" capacity_range:<required_bytes:1073741824 > volume_capabilities:<block:<> access_mode:<mode:SINGLE_NODE_WRITER > > parameters:<key:"attachMode" value:"rw" > parameters:<key:"clusterID" value:"4ac5251b-114f-4044-9bec-2d27fadad502" > parameters:<key:"csi.storage.k8s.io/pv/name" value:"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d" > parameters:<key:"csi.storage.k8s.io/pvc/name" value:"raw-block-pvc" > parameters:<key:"csi.storage.k8s.io/pvc/namespace" value:"default" > parameters:<key:"imageFeatures" value:"layering" > parameters:<key:"imageFormat" value:"2" > parameters:<key:"pool" value:"osdsrbd" > parameters:<key:"profile" value:"f63a7fcc-6e83-49cc-81c1-8627fc8e0f52" > secrets:<key:"userID" value:"kube" > secrets:<key:"userKey" value:"AQDjZYFgOw/FFxAASWpRJz+H0yI3LU4x6Ct2zA==" >
+I0427 04:15:56.991220       1 connection.go:182] GRPC call: /csi.v1.Controller/CreateVolume
+I0427 04:15:56.991234       1 connection.go:183] GRPC request: {"capacity_range":{"required_bytes":1073741824},"name":"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d","parameters":{"attachMode":"rw","clusterID":"4ac5251b-114f-4044-9bec-2d27fadad502","csi.storage.k8s.io/pv/name":"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d","csi.storage.k8s.io/pvc/name":"raw-block-pvc","csi.storage.k8s.io/pvc/namespace":"default","imageFeatures":"layering","imageFormat":"2","pool":"osdsrbd","profile":"f63a7fcc-6e83-49cc-81c1-8627fc8e0f52"},"secrets":"***stripped***","volume_capabilities":[{"AccessType":{"Block":{}},"access_mode":{"mode":1}}]}
+I0427 04:15:57.529205       1 connection.go:185] GRPC response: {"volume":{"capacity_bytes":1073741824,"volume_context":{"attachMode":"rw","clusterID":"4ac5251b-114f-4044-9bec-2d27fadad502","csi.storage.k8s.io/pv/name":"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d","csi.storage.k8s.io/pvc/name":"raw-block-pvc","csi.storage.k8s.io/pvc/namespace":"default","imageFeatures":"layering","imageFormat":"2","imageName":"csi-vol-44027e9e-a70f-11eb-a408-0242ac110003","journalPool":"osdsrbd","pool":"osdsrbd","profile":"f63a7fcc-6e83-49cc-81c1-8627fc8e0f52"},"volume_id":"0001-0024-4ac5251b-114f-4044-9bec-2d27fadad502-0000000000000001-44027e9e-a70f-11eb-a408-0242ac110003"}}
+I0427 04:15:57.529540       1 connection.go:186] GRPC error: <nil>
+I0427 04:15:57.529567       1 controller.go:832] create volume rep: {CapacityBytes:1073741824 VolumeId:0001-0024-4ac5251b-114f-4044-9bec-2d27fadad502-0000000000000001-44027e9e-a70f-11eb-a408-0242ac110003 VolumeContext:map[attachMode:rw clusterID:4ac5251b-114f-4044-9bec-2d27fadad502 csi.storage.k8s.io/pv/name:pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d csi.storage.k8s.io/pvc/name:raw-block-pvc csi.storage.k8s.io/pvc/namespace:default imageFeatures:layering imageFormat:2 imageName:csi-vol-44027e9e-a70f-11eb-a408-0242ac110003 journalPool:osdsrbd pool:osdsrbd profile:f63a7fcc-6e83-49cc-81c1-8627fc8e0f52] ContentSource:<nil> AccessibleTopology:[] XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0}
+I0427 04:15:57.529671       1 controller.go:908] successfully created PV pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d for PVC raw-block-pvc and csi volume name 0001-0024-4ac5251b-114f-4044-9bec-2d27fadad502-0000000000000001-44027e9e-a70f-11eb-a408-0242ac110003
+I0427 04:15:57.529693       1 controller.go:924] successfully created PV {GCEPersistentDisk:nil AWSElasticBlockStore:nil HostPath:nil Glusterfs:nil NFS:nil RBD:nil ISCSI:nil Cinder:nil CephFS:nil FC:nil Flocker:nil FlexVolume:nil AzureFile:nil VsphereVolume:nil Quobyte:nil AzureDisk:nil PhotonPersistentDisk:nil PortworxVolume:nil ScaleIO:nil Local:nil StorageOS:nil CSI:&CSIPersistentVolumeSource{Driver:rbd.csi.ceph.com,VolumeHandle:0001-0024-4ac5251b-114f-4044-9bec-2d27fadad502-0000000000000001-44027e9e-a70f-11eb-a408-0242ac110003,ReadOnly:false,FSType:,VolumeAttributes:map[string]string{attachMode: rw,clusterID: 4ac5251b-114f-4044-9bec-2d27fadad502,csi.storage.k8s.io/pv/name: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d,csi.storage.k8s.io/pvc/name: raw-block-pvc,csi.storage.k8s.io/pvc/namespace: default,imageFeatures: layering,imageFormat: 2,imageName: csi-vol-44027e9e-a70f-11eb-a408-0242ac110003,journalPool: osdsrbd,pool: osdsrbd,profile: f63a7fcc-6e83-49cc-81c1-8627fc8e0f52,storage.kubernetes.io/csiProvisionerIdentity: 1619496897051-8081-soda-csi,},ControllerPublishSecretRef:nil,NodeStageSecretRef:&SecretReference{Name:csi-rbd-secret,Namespace:default,},NodePublishSecretRef:nil,ControllerExpandSecretRef:&SecretReference{Name:csi-rbd-secret,Namespace:default,},}}
+I0427 04:15:57.568786       1 controller.go:1439] provision "default/raw-block-pvc" class "csi-rbd-ceph-sc": volume "pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d" provisioned
+I0427 04:15:57.568847       1 controller.go:1456] provision "default/raw-block-pvc" class "csi-rbd-ceph-sc": succeeded
+I0427 04:15:57.568871       1 volume_store.go:154] Saving volume pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d
+I0427 04:15:57.658619       1 volume_store.go:157] Volume pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d saved
+I0427 04:15:57.658794       1 controller.go:1093] Claim processing succeeded, removing PVC 8ea03417-9275-45c8-b92e-58c467ccbf8d from claims in progress
+I0427 04:15:57.658896       1 controller.go:1332] provision "default/raw-block-pvc" class "csi-rbd-ceph-sc": started
+I0427 04:15:57.658954       1 controller.go:1341] provision "default/raw-block-pvc" class "csi-rbd-ceph-sc": persistentvolume "pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d" already exists, skipping
+I0427 04:15:57.659013       1 controller.go:1095] Stop provisioning, removing PVC 8ea03417-9275-45c8-b92e-58c467ccbf8d from claims in progress
+I0427 04:15:57.659192       1 event.go:282] Event(v1.ObjectReference{Kind:"PersistentVolumeClaim", Namespace:"default", Name:"raw-block-pvc", UID:"8ea03417-9275-45c8-b92e-58c467ccbf8d", APIVersion:"v1", ResourceVersion:"229533", FieldPath:""}): type: 'Normal' reason: 'ProvisioningSucceeded' Successfully provisioned volume pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d
 
-I0107 10:31:19.515052       1 controller.go:620] CreateVolumeRequest {Name:pvc-75e213de-50d3-11eb-a5ff-080027310244 CapacityRange:required_bytes:2147483648  VolumeCapabilities:[mount:<fs_type:"ext4" > access_mode:<mode:SINGLE_NODE_WRITER > ] Parameters:map[profile:rbd.csi.ceph.com] Secrets:map[] VolumeContentSource:<nil> AccessibilityRequirements:<nil> XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0}
-I0107 10:31:19.515216       1 connection.go:182] GRPC call: /csi.v1.Controller/CreateVolume
-I0107 10:31:19.515269       1 connection.go:183] GRPC request: {"capacity_range":{"required_bytes":2147483648},"name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","parameters":{"csi.storage.k8s.io/pv/name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","csi.storage.k8s.io/pvc/name":"demo-pvc-file-system","csi.storage.k8s.io/pvc/namespace":"default","profile":"rbd.csi.ceph.com"},"volume_capabilities":[{"AccessType":{"Mount":{"fs_type":"ext4"}},"access_mode":{"mode":1}}]}
 
 ```
 
@@ -353,16 +477,20 @@ Ceph driver is triggered for volume creation.
 `Ceph RBD driver logs`
 
 ```go
-kubectl logs csi-rbdplugin-provisioner-6b8b9d99fd-x4wn6 csi-rbdplugin
-I0107 10:31:06.447514       1 utils.go:132] ID: 19 GRPC call: /csi.v1.Identity/Probe
-I0107 10:31:06.447889       1 utils.go:133] ID: 19 GRPC request: {}
-I0107 10:31:06.449711       1 utils.go:138] ID: 19 GRPC response: {}
-I0107 10:31:19.490255       1 utils.go:132] ID: 20 GRPC call: /csi.v1.Identity/GetPluginInfo
-I0107 10:31:19.490396       1 utils.go:133] ID: 20 GRPC request: {}
-I0107 10:31:19.490462       1 identityserver-default.go:36] ID: 20 Using default GetPluginInfo
-I0107 10:31:19.490541       1 utils.go:138] ID: 20 GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
-I0107 10:31:19.520057       1 utils.go:132] ID: 21 Req-ID: pvc-75e213de-50d3-11eb-a5ff-080027310244 GRPC call: /csi.v1.Controller/CreateVolume
-I0107 10:31:19.535219       1 utils.go:133] ID: 21 Req-ID: pvc-75e213de-50d3-11eb-a5ff-080027310244 GRPC request: {"capacity_range":{"required_bytes":2147483648},"name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","parameters":{"csi.storage.k8s.io/pv/name":"pvc-75e213de-50d3-11eb-a5ff-080027310244","csi.storage.k8s.io/pvc/name":"demo-pvc-file-system","csi.storage.k8s.io/pvc/namespace":"default","profile":"rbd.csi.ceph.com"},"volume_capabilities":[{"AccessType":{"Mount":{"fs_type":"ext4"}},"access_mode":{"mode":1}}]}
+kubectl logs  csi-rbdplugin-provisioner-68b5cdf677-rlhqq csi-rbdplugin
+I0427 04:15:56.980031       1 identityserver-default.go:36] ID: 16 Using default GetPluginInfo
+I0427 04:15:56.980104       1 utils.go:173] ID: 16 GRPC response: {"name":"rbd.csi.ceph.com","vendor_version":"canary"}
+I0427 04:15:56.994114       1 utils.go:162] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d GRPC call: /csi.v1.Controller/CreateVolume
+I0427 04:15:56.995447       1 utils.go:166] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d GRPC request: {"capacity_range":{"required_bytes":1073741824},"name":"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d","parameters":{"attachMode":"rw","clusterID":"4ac5251b-114f-4044-9bec-2d27fadad502","csi.storage.k8s.io/pv/name":"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d","csi.storage.k8s.io/pvc/name":"raw-block-pvc","csi.storage.k8s.io/pvc/namespace":"default","imageFeatures":"layering","imageFormat":"2","pool":"osdsrbd","profile":"f63a7fcc-6e83-49cc-81c1-8627fc8e0f52"},"secrets":"***stripped***","volume_capabilities":[{"AccessType":{"Block":{}},"access_mode":{"mode":1}}]}
+I0427 04:15:57.008680       1 rbd_util.go:976] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d setting disableInUseChecks: false image features: [layering] mounter: rbd
+I0427 04:15:57.229215       1 omap.go:84] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d got omap values: (pool="osdsrbd", namespace="", name="csi.volumes.default"): map[]
+I0427 04:15:57.236272       1 omap.go:148] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d set omap keys (pool="osdsrbd", namespace="", name="csi.volumes.default"): map[csi.volume.pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d:44027e9e-a70f-11eb-a408-0242ac110003])
+I0427 04:15:57.238187       1 omap.go:148] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d set omap keys (pool="osdsrbd", namespace="", name="csi.volume.44027e9e-a70f-11eb-a408-0242ac110003"): map[csi.imagename:csi-vol-44027e9e-a70f-11eb-a408-0242ac110003 csi.volname:pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d csi.volume.owner:default])
+I0427 04:15:57.238244       1 rbd_journal.go:472] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d generated Volume ID (0001-0024-4ac5251b-114f-4044-9bec-2d27fadad502-0000000000000001-44027e9e-a70f-11eb-a408-0242ac110003) and image name (csi-vol-44027e9e-a70f-11eb-a408-0242ac110003) for request name (pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d)
+I0427 04:15:57.249912       1 rbd_util.go:228] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d rbd: create osdsrbd/csi-vol-44027e9e-a70f-11eb-a408-0242ac110003 size 1024M (features: [layering]) using mon 192.168.1.59:6789
+I0427 04:15:57.308369       1 controllerserver.go:476] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d created volume pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d backed by image csi-vol-44027e9e-a70f-11eb-a408-0242ac110003
+I0427 04:15:57.527605       1 omap.go:148] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d set omap keys (pool="osdsrbd", namespace="", name="csi.volume.44027e9e-a70f-11eb-a408-0242ac110003"): map[csi.imageid:2b8edabf6b50])
+I0427 04:15:57.528163       1 utils.go:173] ID: 17 Req-ID: pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d GRPC response: {"volume":{"capacity_bytes":1073741824,"volume_context":{"attachMode":"rw","clusterID":"4ac5251b-114f-4044-9bec-2d27fadad502","csi.storage.k8s.io/pv/name":"pvc-8ea03417-9275-45c8-b92e-58c467ccbf8d","csi.storage.k8s.io/pvc/name":"raw-block-pvc","csi.storage.k8s.io/pvc/namespace":"default","imageFeatures":"layering","imageFormat":"2","imageName":"csi-vol-44027e9e-a70f-11eb-a408-0242ac110003","journalPool":"osdsrbd","pool":"osdsrbd","profile":"f63a7fcc-6e83-49cc-81c1-8627fc8e0f52"},"volume_id":"0001-0024-4ac5251b-114f-4044-9bec-2d27fadad502-0000000000000001-44027e9e-a70f-11eb-a408-0242ac110003"}}
 
 ```
 
