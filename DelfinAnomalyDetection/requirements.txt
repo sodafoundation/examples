@@ -1,4 +1,4 @@
-tensorflow==2.4.0
+tensorflow==2.5.2
 pandas==1.1.5
 six==1.11.0
 kafka_python==2.0.2
