@@ -13,5 +13,3 @@ spec:
   selector:
     io.soda.service: delfin-api
   type: NodePort
-status:
-  loadBalancer: {}

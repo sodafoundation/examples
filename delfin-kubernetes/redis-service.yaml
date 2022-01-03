@@ -11,5 +11,3 @@ spec:
       targetPort: 6379
   selector:
     io.soda.service: redis
-status:
-  loadBalancer: {}

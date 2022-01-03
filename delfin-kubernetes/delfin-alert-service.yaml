@@ -11,6 +11,4 @@ spec:
       targetPort: 162
   selector:
     io.soda.service: delfin-alert
-status:
-  loadBalancer: {}
 

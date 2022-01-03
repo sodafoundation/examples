@@ -14,5 +14,3 @@ spec:
       targetPort: 15672
   selector:
     io.soda.service: rabbitmq
-status:
-  loadBalancer: {}

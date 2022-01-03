@@ -14,5 +14,3 @@ spec:
       targetPort: 8195
   selector:
     io.soda.service: delfin-exporter
-status:
-  loadBalancer: {}
