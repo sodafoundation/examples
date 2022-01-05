@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.soda.service: rabbitmq
+  name: rabbitmq
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      io.soda.service: rabbitmq
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.soda.service: rabbitmq
+    spec:
+      containers:
+        - env:
+            - name: RABBITMQ_DEFAULT_PASS
+              value: delfinpass
+            - name: RABBITMQ_DEFAULT_USER
+              value: delfinuser
+            - name: RABBITMQ_DEFAULT_VHOST
+              value: /
+          image: rabbitmq:3-management
+          name: rabbitmq
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          resources: {}
+      restartPolicy: Always
+status: {}

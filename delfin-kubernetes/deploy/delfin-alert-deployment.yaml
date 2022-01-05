@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.soda.service: delfin-alert
+  name: delfin-alert
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      io.soda.service: delfin-alert
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.soda.service: delfin-alert
+    spec:
+      containers:
+        - args:
+            - alert
+          env:
+            - name: OS_COORDINATION__BACKEND_SERVER
+              value: redis:6379
+            - name: OS_DEFAULT__TRANSPORT_URL
+              value: rabbit://delfinuser:delfinpass@rabbitmq:5672//
+          image: sodafoundation/delfin:k8s
+          name: delfin-alert
+          ports:
+            - containerPort: 162
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/delfin
+              name: delfin-config1
+            - mountPath: /var/lib/delfin
+              name: delfin-lib
+      restartPolicy: Always
+      volumes:
+        - hostPath:
+            path: /var/lib/delfin
+          name: delfin-lib
+        - name: delfin-config1
+          configMap:
+            name: delfin-config
+
+status: {}
