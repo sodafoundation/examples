@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.soda.service: delfin-task
+  name: delfin-task
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      io.soda.service: delfin-task
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.soda.service: delfin-task
+    spec:
+      containers:
+        - args:
+            - task
+          env:
+            - name: OS_COORDINATION__BACKEND_SERVER
+              value: redis:6379
+            - name: OS_DEFAULT__TRANSPORT_URL
+              value: rabbit://delfinuser:delfinpass@rabbitmq:5672//
+            - name: OS_PROMETHEUS_EXPORTER__METRICS_DIR
+              value: /var/lib/delfin/metrics
+          image: sodafoundation/delfin:k8s
+          name: delfin-task
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/delfin
+              name: delfin-config1
+            - mountPath: /var/lib/delfin
+              name: delfin-lib
+            - mountPath: /var/lib/delfin/metrics
+              name: metrics-dir
+      restartPolicy: Always
+      volumes:
+        - hostPath:
+            path: /var/lib/delfin
+          name: delfin-lib
+        - hostPath:
+            path: /var/lib/delfin/metrics
+          name: metrics-dir
+        - name: delfin-config1
+          configMap:
+            name: delfin-config
+status: {}
