@@ -30,7 +30,7 @@ data:
     delfin_cryptor = delfin.cryptor._Base64
     api_max_limit = 1000
     # Uncomment or add exporters
-    performance_exporters = PerformanceExporterPrometheus, PerformanceExporterKafka
+    # performance_exporters = PerformanceExporterPrometheus, PerformanceExporterKafka
     # alert_exporters = AlertExporterPrometheus
     host = vineela
     [database]
