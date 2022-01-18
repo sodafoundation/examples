@@ -24,7 +24,7 @@ spec:
               value: redis:6379
             - name: OS_DEFAULT__TRANSPORT_URL
               value: rabbit://delfinuser:delfinpass@rabbitmq:5672//
-          image: sodafoundation/delfin:k8s
+          image: sodafoundation/delfin:v1.5.0
           name: delfin-alert
           ports:
             - containerPort: 162
