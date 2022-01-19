@@ -5,4 +5,4 @@ All the dependant components deployment which are necessary for the functioning 
 This is tested with single node kubernetes cluster
 
 ## Documentation
-[https://docs.sodafoundation.io](https://docs.sodafoundation.io/)
+[Link to delfin deployment on kubernetes doccumentation](https://docs.sodafoundation.io/guides/developer-guides/delfin/delfin-kubernetes-guide/)

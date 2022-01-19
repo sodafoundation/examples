@@ -1,0 +1,59 @@
+apiVersion: v1
+data:
+  api-paste.ini: |
+    #############
+    #  Delfin  #
+    #############
+
+    [composite:delfin]
+    use = call:delfin.api:root_app_factory
+    /v1: delfin_api_v1
+
+    [filter:http_proxy_to_wsgi]
+    paste.filter_factory = oslo_middleware.http_proxy_to_wsgi:HTTPProxyToWSGI.factory
+
+    [pipeline:delfin_api_v1]
+    pipeline = cors http_proxy_to_wsgi context_wrapper delfin_api_v1app
+
+    [app:delfin_api_v1app]
+    paste.app_factory = delfin.api.v1.router:APIRouter.factory
+
+    [filter:context_wrapper]
+    paste.filter_factory = delfin.api.middlewares:ContextWrapper.factory
+
+    [filter:cors]
+    paste.filter_factory = oslo_middleware.cors:filter_factory
+    oslo_config_project = delfin
+  delfin.conf: |
+    [DEFAULT]
+    api_paste_config = /etc/delfin/api-paste.ini
+    delfin_cryptor = delfin.cryptor._Base64
+    api_max_limit = 1000
+    # Uncomment or add exporters
+    # performance_exporters = PerformanceExporterPrometheus, PerformanceExporterKafka
+    # alert_exporters = AlertExporterPrometheus
+    host = vineela
+    [database]
+    connection = sqlite:////var/lib/delfin/delfin.sqlite
+    db_backend = sqlalchemy
+
+    [TELEMETRY]
+    performance_collection_interval = 900
+
+    [KAFKA_EXPORTER]
+    kafka_topic_name = "delfin-kafka"
+    kafka_ip = 'localhost'
+    kafka_port = '9092'
+
+    [PROMETHEUS_EXPORTER]
+    metric_server_ip = 0.0.0.0
+    metric_server_port = 8195
+    metrics_cache_file = /var/lib/delfin/delfin_exporter.txt
+
+    [PROMETHEUS_ALERT_MANAGER_EXPORTER]
+    alert_manager_host = 'localhost'
+    alert_manager_port = '9093'
+kind: ConfigMap
+metadata:
+  name: delfin-config
+

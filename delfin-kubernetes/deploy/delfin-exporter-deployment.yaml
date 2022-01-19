@@ -24,7 +24,7 @@ spec:
               value: rabbit://delfinuser:delfinpass@rabbitmq:5672//
             - name: OS_PROMETHEUS_EXPORTER__METRICS_DIR
               value: /var/lib/delfin/metrics
-          image: sodafoundation/delfin:k8s
+          image: sodafoundation/delfin:v1.5.0
           name: delfin-exporter
           ports:
             - containerPort: 8195
