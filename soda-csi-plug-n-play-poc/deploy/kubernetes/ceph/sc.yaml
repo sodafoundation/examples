@@ -1,0 +1,26 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: csi-rbd-ceph-sc
+parameters:
+  imageFormat: "2"
+  imageFeatures: layering
+  attachMode: rw
+  profile: f63a7fcc-6e83-49cc-81c1-8627fc8e0f52
+  clusterID: 4ac5251b-114f-4044-9bec-2d27fadad502
+  pool: osdsrbd
+  csi.storage.k8s.io/provisioner-secret-name: csi-rbd-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: default
+  csi.storage.k8s.io/controller-expand-secret-name: csi-rbd-secret
+  csi.storage.k8s.io/controller-expand-secret-namespace: default
+  csi.storage.k8s.io/node-stage-secret-name: csi-rbd-secret
+  csi.storage.k8s.io/node-stage-secret-namespace: default
+  csi.storage.k8s.io/fstype: ext4
+
+volumeBindingMode: Immediate
+provisioner: soda-csi
+mountOptions:
+   - discard
+
+
+
